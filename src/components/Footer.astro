@@ -1,0 +1,16 @@
+---
+import Social from "./Social.astro";
+---
+<style>
+    footer {
+        display: flex;       /* 启用 Flex 布局，子元素默认横向排列 */
+        gap: 1rem;           /* 子元素之间间距 1rem（16px） */
+        margin-top: 2rem;    /* 上方留 2rem（32px）间距，与正文拉开距离 */
+    }
+</style>
+
+<footer>
+    <Social platform="twitter" username="astrodotbuild"/>
+    <Social platform="github" username="withastro"/>
+    <Social platform="youtube" username="astrodotbuild"/>
+</footer>

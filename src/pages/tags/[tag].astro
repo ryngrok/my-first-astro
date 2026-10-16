@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogPost from "../../layouts/BlogPost.astro";
+
+export async function getStaticPaths() {
+    // 1. 用 Vite 的 import.meta.glob 批量导入所有 md 文件
+    //    { eager: true } 表示同步加载，返回的是 { '文件路径': 模块对象 }
+    //    Object.values 取出所有模块对象，得到一个数组
+    const allPosts = Object.values(
+        import.meta.glob('../posts/*md', {eager: true})
+    );
+
+    // 2. 用 reduce 把文章按 tag 分组
+    //    acc 是累加器对象，初始值是 {}
+    const postsByTag = allPosts.reduce((acc, post: any) => {
+        //    安全地取出 tags 数组，如果不存在就用空数组兜底
+        const tags = post.frontmatter?.tags ?? [];
+
+        //    遍历这篇文章的每一个 tag
+        for (const tag of tags) {
+            //    如果 acc 里还没有这个 tag，就创建一个空数组
+            //    ??= 是"空值合并赋值"：左边为 null/undefined 时才赋值
+            //    然后把当前文章 push 进这个 tag 对应的数组
+            (acc[tag] ??= []).push(post);
+        }
+
+        //    返回累加器，供下一次迭代使用
+        return acc;
+    }, {});
+
+    // 3. 把分组结果转成 SvelteKit 需要的格式
+    //    Object.entries 把 { tag: [posts] } 变成 [[tag, [posts]], ...]
+    //    map 把每一项转成 { params, props } 对象
+    return Object.entries(postsByTag).map(([tag, posts]) => ({
+        params: {tag},      // 路由参数，对应 [tag].svelte 页面
+        props: {posts},     // 传给页面的数据
+    }));
+}
+
+const {tag} = Astro.params;
+const {posts} = Astro.props;
+// 过滤你的文章列表
+// const filteredPosts = posts.filter((post: any) => post.frontmatter.tags?.includes(tag));
+---
+<BaseLayout pageTitle={tag}>
+    <p>包含「{tag}」标签的文章</p>
+    <ul>
+        {posts.map((post: any) =>
+                <BlogPost url={post.url} title={post.frontmatter.title}/>)}
+    </ul>
+</BaseLayout>
